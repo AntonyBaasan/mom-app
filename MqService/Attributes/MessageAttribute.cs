@@ -17,7 +17,7 @@ namespace MqService.Attributes
         /// </summary>
         public virtual bool Durable { get; set; }
 
-        public virtual bool RouteRequired { get; set; }
+        //public virtual bool RouteRequired { get; set; }
 
     }
 }

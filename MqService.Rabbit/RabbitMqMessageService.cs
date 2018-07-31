@@ -23,45 +23,68 @@ namespace MqService.Rabbit
             directMessageProcessor = new DirectMessageProcessor();
         }
 
+        public void Publish(string channel, IMessage message)
+        {
+            Publish(channel, message, "");
+        }
+
         public void Publish(IMessage message)
         {
-            Publish(message, "");
+            Publish("", message, "");
         }
 
         public void Publish(IMessage message, string route)
         {
+            Publish("", message, route);
+        }
+
+        private void Publish(string channel, IMessage message, string route)
+        {
             MessageAttribute messageAttribute = GetMessageAttribute(message.GetType());
             ValidateAttribute(messageAttribute, route);
 
+            string queueName = string.IsNullOrEmpty(channel) ? message.GetType().FullName : channel;
 
             if (messageAttribute.IsBroadcast)
             {
-                broadcastMessageProcessor.Publish(_channel, message.GetType().FullName, messageAttribute.Durable, message, route);
+                broadcastMessageProcessor.Publish(_channel, queueName, messageAttribute.Durable, message, route);
             }
             else
             {
-                directMessageProcessor.Publish(_channel, message.GetType().FullName, messageAttribute.Durable, message);
+                directMessageProcessor.Publish(_channel, queueName, messageAttribute.Durable, message);
             }
+        }
+
+        public void ListenMessage<T>(string channel, Action<T> callback) where T : IMessage
+        {
+            ListenMessage(channel, callback, new string[] { });
         }
 
         public void ListenMessage<T>(Action<T> callback) where T : IMessage
         {
-            ListenMessage(callback, new string[] { });
+            ListenMessage("", callback, new string[] { });
         }
 
         public void ListenMessage<T>(Action<T> callback, string[] routes) where T : IMessage
         {
+            ListenMessage("", callback, routes);
+        }
+
+        private void ListenMessage<T>(string channel, Action<T> callback, string[] routes) where T : IMessage
+        {
             MessageAttribute messageAttribute = GetMessageAttribute(typeof(T));
             ValidateAttribute(messageAttribute, routes);
+
+            string queueName = string.IsNullOrEmpty(channel) ? typeof(T).FullName : channel;
 
             if (messageAttribute.IsBroadcast)
             {
                 var broadcastAttribute = (BroadcastMessageAttribute)messageAttribute;
-                broadcastMessageProcessor.ListenRabbitMessage(_channel, typeof(T).FullName, messageAttribute.Durable, callback, routes, broadcastAttribute.Target);
+                broadcastMessageProcessor.ListenRabbitMessage(_channel, queueName, messageAttribute.Durable, callback, routes, broadcastAttribute.Target);
             }
             else
             {
-                directMessageProcessor.ListenRabbitMessage(_channel, typeof(T).FullName, messageAttribute.Durable, callback);
+                directMessageProcessor.ListenRabbitMessage(_channel, queueName, messageAttribute.Durable, callback);
             }
         }
 
@@ -80,10 +103,10 @@ namespace MqService.Rabbit
             if (messageAttribute.IsBroadcast)
             {
                 var broadcaseAttr = (BroadcastMessageAttribute)messageAttribute;
-                if (broadcaseAttr.RouteRequired == true && (route == null || route.Length == 0))
-                {
-                    throw new Exception($"Route information required for this type of message!");
-                }
+                //if (broadcaseAttr.RouteRequired == true && (route == null || route.Length == 0))
+                //{
+                //    throw new Exception($"Route information required for this type of message!");
+                //}
 
                 if (broadcaseAttr.Target == BroadcastTarget.Application && !(route == null || route.Length == 0))
                 {

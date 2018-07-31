@@ -7,15 +7,15 @@ namespace UserRegistry
     {
         public Dictionary<string, List<string>> _users;
 
-        public Action<string, List<string>> OnUserConnection;
-        public Action<string, List<string>> OnUserDisconnection;
+        public Action<string, string, List<string>> OnUserConnected { get; set; }
+        public Action<string, string, List<string>> OnUserDisconnected { get; set; }
 
         public MemoryUserRegistryService()
         {
             _users = new Dictionary<string, List<string>>();
         }
 
-        public void InsertConnection(string userId, string connectionId)
+        public void UserConnected(string userId, string connectionId)
         {
             if (!_users.ContainsKey(userId))
             {
@@ -27,17 +27,32 @@ namespace UserRegistry
                 _users[userId].Add(connectionId);
             }
 
-            OnUserConnection(userId, _users[userId]);
+            OnUserConnected?.Invoke(userId, connectionId, _users[userId]);
         }
 
-        public void RemoveConnection(string userId, string connectionId)
+        public void UserDisconnected(string userId, string connectionId)
         {
-            throw new NotImplementedException();
+            if (!_users.ContainsKey(userId))
+            {
+                _users.Add(userId, new List<string>());
+            }
+
+            if (_users[userId].Contains(connectionId))
+            {
+                _users[userId].Remove(connectionId);
+            }
+
+            OnUserDisconnected?.Invoke(userId, connectionId, _users[userId]);
         }
 
         public List<string> GetUserConnections(string userId)
         {
-            throw new NotImplementedException();
+            if (!_users.ContainsKey(userId))
+            {
+                _users.Add(userId, new List<string>());
+            }
+
+            return _users[userId];
         }
 
         public Dictionary<string, List<string>> GetAllUsers()

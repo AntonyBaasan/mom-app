@@ -13,7 +13,7 @@ namespace MqService.Rabbit
         private const string ExchangeType = "topic";
         private const string EmptyRoute = "anonymous.info";
 
-        public void Publish(IModel channel, string queueName, bool durable, IMessage message, string route = "")
+        public void Publish(IModel channel, string queueName, bool durable, IMessage message, string route)
         {
             channel.ExchangeDeclare(exchange: queueName, type: ExchangeType);
 
