@@ -20,7 +20,13 @@ namespace NlpLibrary
         private void InitListeners()
         {
             // TODO: listen execution response
+            _messageService.ListenMessage<NlpRequestMessage>(OnNlpRequest);
             _messageService.ListenMessage<ExecutionResponseMessage>(OnExecutionResponse);
+        }
+
+        private void OnNlpRequest(NlpRequestMessage msg)
+        {
+            Console.WriteLine("Got a exec Nlp request! Text=" + msg.ResultText);
         }
 
         private void OnExecutionResponse(ExecutionResponseMessage msg)

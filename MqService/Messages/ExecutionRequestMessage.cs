@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using MqService.Attributes;
+using MqService.Domain;
 
 namespace MqService.Messages
 {
-    class ExecutionRequestMessage
+    [DirectMessage]
+    public class ExecutionRequestMessage
     {
+        public List<Intent> Intents;
     }
 }
