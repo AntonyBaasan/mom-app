@@ -26,7 +26,7 @@ namespace NlpLibrary
 
         private void OnNlpRequest(NlpRequestMessage msg)
         {
-            Console.WriteLine("Got a exec Nlp request! Text=" + msg.ResultText);
+            Console.WriteLine("Got a NlpRequestMessage! Text=" + msg.Text);
         }
 
         private void OnExecutionResponse(ExecutionResponseMessage msg)
@@ -44,7 +44,7 @@ namespace NlpLibrary
 
             //IExecutionObject execObj = ParseIntentToExecutionObject(intent);
 
-            var message = new NlpRequestMessage();
+            var message = new ExecutionRequestMessage();
             message.Intents = list;
             _messageService.Publish(message);
         }

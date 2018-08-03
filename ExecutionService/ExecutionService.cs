@@ -16,10 +16,10 @@ namespace ExecutionServiceLibrary
         public ExecutionService(IMessageService messageService)
         {
             _messageService = messageService;
-            _messageService.ListenMessage<NlpRequestMessage>(OnChatReceived);
+            _messageService.ListenMessage<ExecutionRequestMessage>(OnChatReceived);
         }
 
-        public void OnChatReceived(NlpRequestMessage msg)
+        public void OnChatReceived(ExecutionRequestMessage msg)
         {
             List<Intent> list = msg.Intents;
 

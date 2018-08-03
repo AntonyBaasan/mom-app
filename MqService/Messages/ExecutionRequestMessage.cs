@@ -5,7 +5,7 @@ using MqService.Domain;
 namespace MqService.Messages
 {
     [DirectMessage]
-    public class ExecutionRequestMessage
+    public class ExecutionRequestMessage : IMessage
     {
         public List<Intent> Intents;
     }

@@ -50,6 +50,7 @@
     <Compile Include="Attributes\DirectMessageAttribute.cs" />
     <Compile Include="Attributes\MessageAttribute.cs" />
     <Compile Include="Domain\Intent.cs" />
+    <Compile Include="Helper\QueueNameResolver.cs" />
     <Compile Include="IMessageService.cs" />
     <Compile Include="Messages\AbstractMessage.cs" />
     <Compile Include="Messages\ExecutionRequestMessage.cs" />

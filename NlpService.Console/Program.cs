@@ -1,6 +1,8 @@
 ﻿using System;
 using MqService;
+using MqService.Helper;
 using MqService.Messages;
+using MqService.Messages.Contents;
 using MqService.Rabbit;
 using NlpLibrary;
 
@@ -29,9 +31,8 @@ namespace NlpConsoleApp
                     //nlpService.SendText(inputString);
                     //Console.WriteLine("Sent a message: " + inputString);
 
-                    //messageService.Publish(new UserQueueMessage { UserId = userId, Text = text }, userId);
-                    var channelName = userId + typeof(UserQueueMessage).FullName;
-                    messageService.Publish(channelName, new UserQueueMessage { UserId = userId, Text = text });
+                    var channelName = QueueNameResolver.GetUserQueueName(userId);
+                    messageService.Publish(channelName, new UserQueueMessage { UserId = userId, Content = new NotificationText { Text = text } });
 
                 }
                 catch (Exception e)

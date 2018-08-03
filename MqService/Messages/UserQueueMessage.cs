@@ -9,7 +9,6 @@ namespace MqService.Messages
     public class UserQueueMessage: IMessage
     {
         public string UserId;
-        public string Text;
         public object Content;
     }
 }
