@@ -1,5 +1,4 @@
 ﻿using MqService.Attributes;
-using MqService.Messages.Contents;
 
 namespace MqService.Messages
 {

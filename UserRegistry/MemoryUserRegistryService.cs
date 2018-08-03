@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace UserRegistry
 {
     public class MemoryUserRegistryService : IUserRegistryService
     {
-        public Dictionary<string, List<string>> _users;
+        private Dictionary<string, List<string>> _users;
 
         public Action<string, string, List<string>> OnUserConnected { get; set; }
         public Action<string, string, List<string>> OnUserDisconnected { get; set; }
@@ -55,9 +56,9 @@ namespace UserRegistry
             return _users[userId];
         }
 
-        public Dictionary<string, List<string>> GetAllUsers()
+        public Dictionary<string, List<string>> GetAllOnlineUsers()
         {
-            return _users;
+            return _users.Where(u=> u.Value.Count > 0).ToDictionary(p => p.Key, p => p.Value);
         }
     }
 }

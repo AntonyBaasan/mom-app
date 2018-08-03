@@ -11,6 +11,6 @@ namespace UserRegistry
         void UserConnected(string userId, string connectionId);
         void UserDisconnected(string userId, string connectionId);
         List<string> GetUserConnections(string userId);
-        Dictionary<string, List<string>> GetAllUsers();
+        Dictionary<string, List<string>> GetAllOnlineUsers();
     }
 }
