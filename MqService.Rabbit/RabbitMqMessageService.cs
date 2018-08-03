@@ -58,22 +58,22 @@ namespace MqService.Rabbit
             }
         }
 
-        public string ListenMessage<T>(string channel, Action<T> callback) where T : IMessage
+        public KeyValuePair<string, object> ListenMessage<T>(string channel, Action<T> callback) where T : IMessage
         {
             return ListenMessage(channel, callback, new string[] { });
         }
 
-        public string ListenMessage<T>(Action<T> callback) where T : IMessage
+        public KeyValuePair<string, object> ListenMessage<T>(Action<T> callback) where T : IMessage
         {
             return ListenMessage("", callback, new string[] { });
         }
 
-        public string ListenMessage<T>(Action<T> callback, string[] routes) where T : IMessage
+        public KeyValuePair<string, object> ListenMessage<T>(Action<T> callback, string[] routes) where T : IMessage
         {
             return ListenMessage("", callback, routes);
         }
 
-        private string ListenMessage<T>(string channel, Action<T> callback, string[] routes) where T : IMessage
+        private KeyValuePair<string, object> ListenMessage<T>(string channel, Action<T> callback, string[] routes) where T : IMessage
         {
             MessageAttribute messageAttribute = GetMessageAttribute(typeof(T));
             ValidateAttribute(messageAttribute, routes);
@@ -118,21 +118,24 @@ namespace MqService.Rabbit
                 var result = new List<T>();
                 for (int i = 0; i < msgCount; i++)
                 {
-                    BasicGetResult r = _channel.BasicGet(channelName, true);
-                    if (r == null)
+                    var r = _channel.BasicGet(channelName, false);
+                    if (r == null) { continue; }
+                    try
                     {
-                        continue;
+                        var message = Encoding.UTF8.GetString(r.Body);
+                        var msg = JsonConvert.DeserializeObject<T>(message);
+
+                        result.Add(msg);
+                        _channel.BasicAck(r.DeliveryTag, false);
                     }
-
-                    byte[] body = r.Body;
-                    var messagePayload = Encoding.UTF8.GetString(body);
-                    var msg = JsonConvert.DeserializeObject<T>(messagePayload);
-                    result.Add(msg);
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Can not parse a message! " + e.Message);
+                        // TODO: log 
+                    }
                 }
-
                 return result;
             }
-
         }
 
         private void ValidateAttribute(MessageAttribute messageAttribute, string route = null)

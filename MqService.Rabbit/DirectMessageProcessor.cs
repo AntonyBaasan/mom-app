@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ namespace MqService.Rabbit
                 body: jsonAsString);
         }
 
-        public string ListenRabbitMessage<T>(IModel _channel, string channelName, bool durable, Action<T> callback) where T : IMessage
+        public KeyValuePair<string, object> ListenRabbitMessage<T>(IModel _channel, string channelName, bool durable, Action<T> callback) where T : IMessage
         {
             _channel.QueueDeclare(queue: channelName, durable: durable, exclusive: false, autoDelete: false, arguments: null);
 
@@ -40,7 +41,10 @@ namespace MqService.Rabbit
                  await Task.Yield();
              };
 
-            return _channel.BasicConsume(queue: channelName, autoAck: true, consumer: consumer);
+            return new KeyValuePair<string, object>(
+                _channel.BasicConsume(queue: channelName, autoAck: true, consumer: consumer),
+                consumer
+                );
         }
     }
 }

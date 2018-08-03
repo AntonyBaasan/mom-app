@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using MqService.Attributes;
 using MqService.Messages;
@@ -29,7 +30,7 @@ namespace MqService.Rabbit
             Console.WriteLine(" [x] Sent '{0}':'{1}'", routingKey, message);
         }
 
-        public string ListenRabbitMessage<T>(IModel channel, string channelName, bool durable, Action<T> callback, string[] routes, BroadcastTarget target) where T : IMessage
+        public KeyValuePair<string, object> ListenRabbitMessage<T>(IModel channel, string channelName, bool durable, Action<T> callback, string[] routes, BroadcastTarget target) where T : IMessage
         {
             channel.ExchangeDeclare(exchange: channelName, type: ExchangeType);
 
@@ -63,7 +64,10 @@ namespace MqService.Rabbit
                 callback(msg);
             };
 
-            return channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
+            return new KeyValuePair<string, object>(
+                channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer),
+                consumer
+            );
         }
 
         private string GetApplicationName()

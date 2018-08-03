@@ -12,11 +12,11 @@ namespace MqService
 
         void Publish(IMessage message, string route);
 
-        string ListenMessage<T>(string channelName, Action<T> callback) where T : IMessage;
+        KeyValuePair<string, object> ListenMessage<T>(string channelName, Action<T> callback) where T : IMessage;
 
-        string ListenMessage<T>(Action<T> callback) where T : IMessage;
+        KeyValuePair<string, object> ListenMessage<T>(Action<T> callback) where T : IMessage;
 
-        string ListenMessage<T>(Action<T> callback, string[] routes) where T : IMessage;
+        KeyValuePair<string, object> ListenMessage<T>(Action<T> callback, string[] routes) where T : IMessage;
 
         void StopListen(string listenerId);
 

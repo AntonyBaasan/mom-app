@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using ExecutionServiceLibrary;
 using MqService;
+using MqService.Helper;
 using MqService.Messages;
 using MqService.Rabbit;
 
@@ -21,7 +22,7 @@ namespace ExecutionServiceConsole
 
             Console.WriteLine("Which user to listen:");
             var userId = Console.ReadLine();
-            var channelName = userId + typeof(UserQueueMessage).FullName;
+            var channelName = QueueNameResolver.GetUserQueueName(userId);
             while(true)
             {
                 Console.WriteLine("fetching...");
