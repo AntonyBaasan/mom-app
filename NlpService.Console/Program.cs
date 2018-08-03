@@ -29,9 +29,9 @@ namespace NlpConsoleApp
                     //nlpService.SendText(inputString);
                     //Console.WriteLine("Sent a message: " + inputString);
 
-                    //messageService.Publish(new UserNotificationMessage { UserId = userId, Text = text }, userId);
-                    var channelName = userId + typeof(UserNotificationMessage).FullName;
-                    messageService.Publish(channelName, new UserNotificationMessage { UserId = userId, Text = text });
+                    //messageService.Publish(new UserQueueMessage { UserId = userId, Text = text }, userId);
+                    var channelName = userId + typeof(UserQueueMessage).FullName;
+                    messageService.Publish(channelName, new UserQueueMessage { UserId = userId, Text = text });
 
                 }
                 catch (Exception e)

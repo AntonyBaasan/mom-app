@@ -16,15 +16,15 @@ namespace ExecutionServiceLibrary
         public ExecutionService(IMessageService messageService)
         {
             _messageService = messageService;
-            _messageService.ListenMessage<ChatMessage>(OnChatReceived);
+            _messageService.ListenMessage<NlpRequestMessage>(OnChatReceived);
         }
 
-        public void OnChatReceived(ChatMessage msg)
+        public void OnChatReceived(NlpRequestMessage msg)
         {
             List<Intent> list = msg.Intents;
 
             Console.WriteLine($"Got a chat message with {list.Count} intenst(s)!");
-            var message = new ExecutionMessage();
+            var message = new ExecutionResponseMessage();
             message.ResultText = "ExecutedObject1";
             _messageService.Publish(message);
         }

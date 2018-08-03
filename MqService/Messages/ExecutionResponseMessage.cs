@@ -3,7 +3,7 @@
 namespace MqService.Messages
 {
     [DirectMessage]
-    public class ExecutionMessage: AbstractMessage
+    public class ExecutionResponseMessage: AbstractMessage
     {
         public string ResultText;
     }

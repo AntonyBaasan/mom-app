@@ -21,14 +21,14 @@ namespace ExecutionServiceConsole
 
             Console.WriteLine("Which user to listen:");
             var userId = Console.ReadLine();
-            var channelName = userId + typeof(UserNotificationMessage).FullName;
+            var channelName = userId + typeof(UserQueueMessage).FullName;
             while(true)
             {
                 Console.WriteLine("fetching...");
-                List<UserNotificationMessage> r = messageService.GetMessages<UserNotificationMessage>(channelName);
+                List<UserQueueMessage> r = messageService.GetMessages<UserQueueMessage>(channelName);
                 Thread.Sleep(1000);
             }
-            //messageService.ListenMessage<UserNotificationMessage>(channelName, (msg) =>
+            //messageService.ListenMessage<UserQueueMessage>(channelName, (msg) =>
             //{
             //    Console.WriteLine($"Got a message from {msg.UserId}, text: {msg.Text}");
             //});

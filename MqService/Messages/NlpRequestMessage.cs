@@ -5,7 +5,7 @@ using MqService.Domain;
 namespace MqService.Messages
 {
     [DirectMessage]
-    public class ChatMessage : AbstractMessage
+    public class NlpRequestMessage : AbstractMessage
     {
         public List<Intent> Intents;
     }

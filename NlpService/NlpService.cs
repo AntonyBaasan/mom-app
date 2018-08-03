@@ -20,10 +20,10 @@ namespace NlpLibrary
         private void InitListeners()
         {
             // TODO: listen execution response
-            _messageService.ListenMessage<ExecutionMessage>(OnExecutionResponse);
+            _messageService.ListenMessage<ExecutionResponseMessage>(OnExecutionResponse);
         }
 
-        private void OnExecutionResponse(ExecutionMessage msg)
+        private void OnExecutionResponse(ExecutionResponseMessage msg)
         {
             Console.WriteLine("Got a exec result message! ResultText=" + msg.ResultText);
         }
@@ -38,7 +38,7 @@ namespace NlpLibrary
 
             //IExecutionObject execObj = ParseIntentToExecutionObject(intent);
 
-            var message = new ChatMessage();
+            var message = new NlpRequestMessage();
             message.Intents = list;
             _messageService.Publish(message);
         }

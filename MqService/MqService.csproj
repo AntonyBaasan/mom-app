@@ -52,11 +52,15 @@
     <Compile Include="Domain\Intent.cs" />
     <Compile Include="IMessageService.cs" />
     <Compile Include="Messages\AbstractMessage.cs" />
-    <Compile Include="Messages\ChatMessage.cs" />
-    <Compile Include="Messages\ExecutionMessage.cs" />
+    <Compile Include="Messages\ExecutionRequestMessage.cs" />
+    <Compile Include="Messages\NlpRequestMessage.cs" />
+    <Compile Include="Messages\Contents\CommandAndControl.cs" />
+    <Compile Include="Messages\Contents\NlpResponse.cs" />
+    <Compile Include="Messages\Contents\NotificationText.cs" />
+    <Compile Include="Messages\ExecutionResponseMessage.cs" />
     <Compile Include="Messages\IMessage.cs" />
     <Compile Include="Messages\SystemControllerMessage.cs" />
-    <Compile Include="Messages\UserNotificationMessage.cs" />
+    <Compile Include="Messages\UserQueueMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
