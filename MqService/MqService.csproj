@@ -33,7 +33,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>cert_2013.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>C:\cert_2013.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -58,9 +58,6 @@
     <Compile Include="Messages\SystemControllerMessage.cs" />
     <Compile Include="Messages\UserNotificationMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="cert_2013.pfx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -29,7 +29,7 @@ namespace MqService.Rabbit
             Console.WriteLine(" [x] Sent '{0}':'{1}'", routingKey, message);
         }
 
-        public void ListenRabbitMessage<T>(IModel channel, string channelName, bool durable, Action<T> callback, string[] routes, BroadcastTarget target) where T : IMessage
+        public string ListenRabbitMessage<T>(IModel channel, string channelName, bool durable, Action<T> callback, string[] routes, BroadcastTarget target) where T : IMessage
         {
             channel.ExchangeDeclare(exchange: channelName, type: ExchangeType);
 
@@ -63,7 +63,7 @@ namespace MqService.Rabbit
                 callback(msg);
             };
 
-            channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
+            return channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
         }
 
         private string GetApplicationName()

@@ -6,7 +6,7 @@ namespace MqService.Messages
     /// Route is required because notification module should listen 
     /// individual user channed. User ID will be set as route name
     /// </summary>
-    [BroadcastMessage(Target = BroadcastTarget.Application)]
+    [DirectMessage]
     public class UserNotificationMessage: IMessage
     {
         public string UserId;

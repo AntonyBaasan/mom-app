@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text;
 using MqService.Attributes;
 using MqService.Messages;
+using Newtonsoft.Json;
 using RabbitMQ.Client;
 
 namespace MqService.Rabbit
@@ -15,7 +18,7 @@ namespace MqService.Rabbit
 
         public RabbitMqMessageService(string connection, int port)
         {
-            factory = new ConnectionFactory() { HostName = connection, Port = port };
+            factory = new ConnectionFactory() { HostName = connection, Port = port, DispatchConsumersAsync = true };
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
 
@@ -55,22 +58,22 @@ namespace MqService.Rabbit
             }
         }
 
-        public void ListenMessage<T>(string channel, Action<T> callback) where T : IMessage
+        public string ListenMessage<T>(string channel, Action<T> callback) where T : IMessage
         {
-            ListenMessage(channel, callback, new string[] { });
+            return ListenMessage(channel, callback, new string[] { });
         }
 
-        public void ListenMessage<T>(Action<T> callback) where T : IMessage
+        public string ListenMessage<T>(Action<T> callback) where T : IMessage
         {
-            ListenMessage("", callback, new string[] { });
+            return ListenMessage("", callback, new string[] { });
         }
 
-        public void ListenMessage<T>(Action<T> callback, string[] routes) where T : IMessage
+        public string ListenMessage<T>(Action<T> callback, string[] routes) where T : IMessage
         {
-            ListenMessage("", callback, routes);
+            return ListenMessage("", callback, routes);
         }
 
-        private void ListenMessage<T>(string channel, Action<T> callback, string[] routes) where T : IMessage
+        private string ListenMessage<T>(string channel, Action<T> callback, string[] routes) where T : IMessage
         {
             MessageAttribute messageAttribute = GetMessageAttribute(typeof(T));
             ValidateAttribute(messageAttribute, routes);
@@ -80,15 +83,59 @@ namespace MqService.Rabbit
             if (messageAttribute.IsBroadcast)
             {
                 var broadcastAttribute = (BroadcastMessageAttribute)messageAttribute;
-                broadcastMessageProcessor.ListenRabbitMessage(_channel, queueName, messageAttribute.Durable, callback, routes, broadcastAttribute.Target);
+                return broadcastMessageProcessor.ListenRabbitMessage(_channel, queueName, messageAttribute.Durable, callback, routes, broadcastAttribute.Target);
             }
             else
             {
-                directMessageProcessor.ListenRabbitMessage(_channel, queueName, messageAttribute.Durable, callback);
+                return directMessageProcessor.ListenRabbitMessage(_channel, queueName, messageAttribute.Durable, callback);
             }
         }
 
-        private void ValidateAttribute(MessageAttribute messageAttribute, string route)
+        public void StopListen(string listenerId)
+        {
+            _channel.BasicCancel(listenerId);
+        }
+
+        public List<T> GetMessages<T>()
+        {
+            return GetMessages<T>(null);
+        }
+
+        public List<T> GetMessages<T>(string channelName)
+        {
+            MessageAttribute messageAttribute = GetMessageAttribute(typeof(T));
+            ValidateAttribute(messageAttribute);
+
+            string queueName = string.IsNullOrEmpty(channelName) ? typeof(T).FullName : channelName;
+
+            if (messageAttribute.IsBroadcast)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                uint msgCount = _channel.MessageCount(channelName);
+                var result = new List<T>();
+                for (int i = 0; i < msgCount; i++)
+                {
+                    BasicGetResult r = _channel.BasicGet(channelName, true);
+                    if (r == null)
+                    {
+                        continue;
+                    }
+
+                    byte[] body = r.Body;
+                    var messagePayload = Encoding.UTF8.GetString(body);
+                    var msg = JsonConvert.DeserializeObject<T>(messagePayload);
+                    result.Add(msg);
+                }
+
+                return result;
+            }
+
+        }
+
+        private void ValidateAttribute(MessageAttribute messageAttribute, string route = null)
         {
             string[] routes = string.IsNullOrEmpty(route) ? null : new string[] { route };
             ValidateAttribute(messageAttribute, routes);
