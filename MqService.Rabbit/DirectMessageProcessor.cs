@@ -33,7 +33,6 @@ namespace MqService.Rabbit
             consumer.Received += async (model, ea) =>
              {
                  Debug.WriteLine("Received!!");
-                 System.Diagnostics.EventLog.WriteEntry("Trident", "Received!!");
 
                  var messagePayload = Encoding.UTF8.GetString(ea.Body);
                  var msg = JsonConvert.DeserializeObject<T>(messagePayload);
