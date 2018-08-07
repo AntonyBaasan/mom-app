@@ -5,12 +5,14 @@ namespace UserRegistry
 {
     public interface IUserRegistryService
     {
-        Action<string, string, List<string>> OnUserConnected { get; set; }
-        Action<string, string, List<string>> OnUserDisconnected { get; set; }
+        Action<string, string, HashSet<string>> OnUserConnected { get; set; }
+        Action<string, string, HashSet<string>> OnUserDisconnected { get; set; }
 
-        void UserConnected(string userId, string connectionId);
-        void UserDisconnected(string userId, string connectionId);
-        List<string> GetUserConnections(string userId);
-        Dictionary<string, List<string>> GetAllOnlineUsers();
+        int Count {get;}
+
+        void Add(string userId, string connectionId);
+        void Remove(string userId, string connectionId);
+        HashSet<string> GetUserConnections(string userId);
+        Dictionary<string, HashSet<string>> GetAllOnlineUsers();
     }
 }
