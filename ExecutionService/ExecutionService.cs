@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using MqService;
 using MqService.Domain;
-using MqService.Messages;
+using MqService.Messages.Execution;
 
 namespace ExecutionServiceLibrary
 {
@@ -16,16 +13,17 @@ namespace ExecutionServiceLibrary
         public ExecutionService(IMessageService messageService)
         {
             _messageService = messageService;
-            _messageService.ListenMessage<ExecutionRequestMessage>(OnChatReceived);
+            _messageService.ListenMessage<ExecutionRequestMessage>(OnExecutionRequestReceived);
         }
 
-        public void OnChatReceived(ExecutionRequestMessage msg)
+        public void OnExecutionRequestReceived(ExecutionRequestMessage msg)
         {
             List<Intent> list = msg.Intents;
 
             Console.WriteLine($"Got a chat message with {list.Count} intenst(s)!");
             var message = new ExecutionResponseMessage();
             message.ResultText = "ExecutedObject1";
+            message.From = msg.From;
             _messageService.Publish(message);
         }
     }

@@ -6,7 +6,7 @@ namespace MqService.Helper
     {
         public static string GetUserQueueName(string userId)
         {
-            return "UserQueue_"+userId+"_"+typeof(UserQueueMessage).FullName;
+            return typeof(UserQueueMessage).FullName+"_UserQueue_"+userId;
         }
     }
 }

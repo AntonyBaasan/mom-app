@@ -11,26 +11,24 @@ namespace MqService.Rabbit
 {
     class BroadcastMessageProcessor
     {
-        private const string ExchangeType = "topic";
+        private const string ExchangeType = "fanout";
         private const string EmptyRoute = "anonymous.info";
 
-        public void Publish(IModel channel, string queueName, bool durable, IMessage message, string route)
+        public void Publish(IModel channel, string channelName, bool durable, IMessage message)
         {
-            channel.ExchangeDeclare(exchange: queueName, type: ExchangeType);
-
-            var routingKey = (route.Length > 0) ? route : EmptyRoute;
+            channel.ExchangeDeclareNoWait(exchange: channelName, type: ExchangeType);
 
             string json = JsonConvert.SerializeObject(message);
             var jsonAsString = Encoding.UTF8.GetBytes(json);
 
-            channel.BasicPublish(exchange: queueName,
-                routingKey: routingKey,
+            channel.BasicPublish(exchange: channelName,
+                routingKey: "",
                 basicProperties: null,
                 body: jsonAsString);
-            Console.WriteLine(" [x] Sent '{0}':'{1}'", routingKey, message);
+            Console.WriteLine(" [x] Sent fanout to '{0}'", channelName);
         }
 
-        public KeyValuePair<string, object> ListenRabbitMessage<T>(IModel channel, string channelName, bool durable, Action<T> callback, string[] routes, BroadcastTarget target) where T : IMessage
+        public string ListenRabbitMessage<T>(IModel channel, string channelName, bool durable, Action<T> callback, BroadcastTarget target) where T : IMessage
         {
             channel.ExchangeDeclare(exchange: channelName, type: ExchangeType);
 
@@ -45,15 +43,7 @@ namespace MqService.Rabbit
                 channel.QueueDeclare(queue: queueName, durable: durable, exclusive: false, autoDelete: false, arguments: null);
             }
 
-            if (routes.Length < 1)
-            {
-                routes = new string[] { EmptyRoute };
-            }
-
-            foreach (var bindingKey in routes)
-            {
-                channel.QueueBind(queue: queueName, exchange: channelName, routingKey: bindingKey);
-            }
+            channel.QueueBind(queue: queueName, exchange: channelName, routingKey: "");
 
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += (model, ea) =>
@@ -64,10 +54,7 @@ namespace MqService.Rabbit
                 callback(msg);
             };
 
-            return new KeyValuePair<string, object>(
-                channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer),
-                consumer
-            );
+            return channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
         }
 
         private string GetApplicationName()

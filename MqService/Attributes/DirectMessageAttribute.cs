@@ -9,5 +9,7 @@ namespace MqService.Attributes
     public class DirectMessageAttribute : MessageAttribute
     {
         public override bool IsBroadcast { get => false; }
+
+        public string Expiration { get; set; }
     }
 }

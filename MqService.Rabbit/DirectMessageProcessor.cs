@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,20 +11,27 @@ namespace MqService.Rabbit
 {
     class DirectMessageProcessor
     {
-        public void Publish(IModel _channel, string queueName, bool durable, IMessage message)
+        public void Publish(IModel _channel, string queueName, bool durable, IMessage message, string expiration)
         {
-            _channel.QueueDeclare(queue: queueName, durable: durable, exclusive: false, autoDelete: false, arguments: null);
+            //important to use no wait, otherwise throws an exception if we try to publish inside Consumer handler
+            _channel.QueueDeclareNoWait(queue: queueName, durable: durable, exclusive: false, autoDelete: false, arguments: null);
 
             string json = JsonConvert.SerializeObject(message);
             var jsonAsString = Encoding.UTF8.GetBytes(json);
 
+            IBasicProperties props = _channel.CreateBasicProperties();
+            if(!string.IsNullOrEmpty(expiration))
+            {
+                props.Expiration = expiration;
+            }
+
             _channel.BasicPublish(exchange: "",
                 routingKey: queueName,
-                basicProperties: null,
+                basicProperties: props,
                 body: jsonAsString);
         }
 
-        public KeyValuePair<string, object> ListenRabbitMessage<T>(IModel _channel, string channelName, bool durable, Action<T> callback) where T : IMessage
+        public string ListenRabbitMessage<T>(IModel _channel, string channelName, bool durable, Action<T> callback) where T : IMessage
         {
             _channel.QueueDeclare(queue: channelName, durable: durable, exclusive: false, autoDelete: false, arguments: null);
 
@@ -40,10 +46,7 @@ namespace MqService.Rabbit
                  await Task.Yield();
              };
 
-            return new KeyValuePair<string, object>(
-                _channel.BasicConsume(queue: channelName, autoAck: true, consumer: consumer),
-                consumer
-                );
+            return _channel.BasicConsume(queue: channelName, autoAck: true, consumer: consumer);
         }
     }
 }

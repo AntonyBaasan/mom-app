@@ -1,6 +1,5 @@
 ﻿using System;
 using MqService.Attributes;
-using MqService.Messages.Contents;
 using Newtonsoft.Json;
 
 namespace MqService.Messages
@@ -8,18 +7,21 @@ namespace MqService.Messages
     /// <summary>
     /// </summary>
     [DirectMessage]
-    public class UserQueueMessage: IMessage
+    public class UserQueueMessage : AbstractMessage
     {
         public string UserId;
-        public MessageContentType contentType;
         public object Content;
+        public string ContentTypeFullName;
 
         public object DeserializeContent()
         {
-            if(contentType == MessageContentType.NotificationText)
-                return JsonConvert.DeserializeObject<NotificationText>(Content.ToString());
+            return JsonConvert.DeserializeObject(Content.ToString(), Type.GetType(ContentTypeFullName));
+        }
 
-            return null;
+        public void SetContent(object content)
+        {
+            ContentTypeFullName = content.GetType().FullName;
+            Content = content;
         }
     }
 }

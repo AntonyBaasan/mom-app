@@ -45,17 +45,17 @@ namespace UserRegistry
                 HashSet<string> connections;
                 if (_users.TryGetValue(userId, out connections))
                 {
-                    lock(connections)
+                    lock (connections)
                     {
                         connections.Remove(connectionId);
-                        if(connections.Count == 0)
+                        if (connections.Count == 0)
                         {
                             _users.Remove(userId);
                         }
                     }
                 }
 
-                OnUserDisconnected?.Invoke(userId, connectionId, _users[userId]);
+                OnUserDisconnected?.Invoke(userId, connectionId, _users.ContainsKey(userId) ? _users[userId] :  new HashSet<string>());
             }
         }
 
@@ -63,7 +63,7 @@ namespace UserRegistry
         {
             if (!_users.ContainsKey(userId))
             {
-                return null;
+                return new HashSet<string>();
             }
 
             return _users[userId];

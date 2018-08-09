@@ -3,7 +3,7 @@
 namespace MqService.Messages
 {
     [BroadcastMessage(Target = BroadcastTarget.All)]
-    public class SystemControllerMessage: IMessage
+    public class SystemControllerMessage: AbstractMessage
     {
     }
 }

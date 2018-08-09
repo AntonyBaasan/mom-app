@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using MqService;
 using MqService.Domain;
 using MqService.Messages;
+using MqService.Messages.Execution;
+using MqService.Messages.Nlp;
 
 namespace NlpLibrary
 {
@@ -27,36 +29,44 @@ namespace NlpLibrary
         private void OnNlpRequest(NlpRequestMessage msg)
         {
             Console.WriteLine("Got a NlpRequestMessage! Text=" + msg.Text);
+            // use SimpleParser or Chatbot to get FFO
+            List<Intent> intents = RequestToSimpleParserOrChatbot(msg.Text);
+            RequestToExecutionEngine(intents, msg.From);
         }
 
         private void OnExecutionResponse(ExecutionResponseMessage msg)
         {
-            Console.WriteLine("Got a exec result message! ResultText=" + msg.ResultText);
-        }
+            Console.WriteLine("Got a exec result message! ResultText=" + msg.ResultText + ", From: " + msg.From);
 
-        public void SendText(string text)
-        {
-            //TODO: use SimpleParser or Chatbot to get FFO
-            Intent intent = SendRequestToSimpleParserOrChatbot(text);
-            List<Intent> list = new List<Intent>();
-            list.Add(intent);
-            list.Add(intent);
+            var message = new NlpResponseMessage();
+            message.Response = "NlpService got response from ExecEngine: " + msg.ResultText + ", From: " + msg.From;
+            message.To = msg.From;
 
-            //IExecutionObject execObj = ParseIntentToExecutionObject(intent);
-
-            var message = new ExecutionRequestMessage();
-            message.Intents = list;
             _messageService.Publish(message);
         }
+
+        private void RequestToExecutionEngine(List<Intent> intents, string @from)
+        {
+            var message = new ExecutionRequestMessage();
+            //IExecutionObject execObj = ParseIntentToExecutionObject(intent);
+            message.Intents = intents;
+            message.From = from;
+            _messageService.Publish(message);
+        }
+
 
         //private IExecutionObject ParseIntentToExecutionObject(Intent intent)
         //{
         //    throw new NotImplementedException();
         //}
 
-        private Intent SendRequestToSimpleParserOrChatbot(string text)
+        private List<Intent> RequestToSimpleParserOrChatbot(string text)
         {
-            return new Intent { Name = "OpenFile" };
+            List<Intent> list = new List<Intent>();
+            list.Add(new Intent { Name = "OpenFile" });
+            list.Add(new Intent { Name = "OpenFile" });
+
+            return list;
         }
 
         public void SendAudio(string text)

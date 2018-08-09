@@ -10,80 +10,75 @@ namespace MqService.Rabbit
 {
     public class RabbitMqMessageService : IMessageService
     {
+        private readonly bool _rpcAllowed;
         private ConnectionFactory factory;
         private IConnection _connection;
         private IModel _channel;
         private BroadcastMessageProcessor broadcastMessageProcessor;
         private DirectMessageProcessor directMessageProcessor;
+        private RpcMessageProcessor rpcMessageProcessor;
 
-        public RabbitMqMessageService(string connection, int port)
+
+        public RabbitMqMessageService(string connection, int port, int autoRecoveryIntervalMinutes = 1, bool rpcAllowed = true)
         {
+            _rpcAllowed = rpcAllowed;
             factory = new ConnectionFactory() { HostName = connection, Port = port, DispatchConsumersAsync = true };
+            factory.AutomaticRecoveryEnabled = true;
+            factory.NetworkRecoveryInterval = TimeSpan.FromMinutes(autoRecoveryIntervalMinutes);
+
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
 
             broadcastMessageProcessor = new BroadcastMessageProcessor();
             directMessageProcessor = new DirectMessageProcessor();
-        }
-
-        public void Publish(string channel, IMessage message)
-        {
-            Publish(channel, message, "");
+            if (_rpcAllowed) rpcMessageProcessor = new RpcMessageProcessor(_channel);
         }
 
         public void Publish(IMessage message)
         {
-            Publish("", message, "");
+            Publish("", message);
         }
 
-        public void Publish(IMessage message, string route)
+        public bool IsConnected()
         {
-            Publish("", message, route);
+            return _connection.IsOpen;
         }
 
-        private void Publish(string channel, IMessage message, string route)
+        public void Publish(string channelName, IMessage message)
         {
-            MessageAttribute messageAttribute = GetMessageAttribute(message.GetType());
-            ValidateAttribute(messageAttribute, route);
+            var messageAttribute = GetCustomAttribute<MessageAttribute>(message.GetType());
+            ValidateAttribute(messageAttribute);
 
-            string queueName = string.IsNullOrEmpty(channel) ? message.GetType().FullName : channel;
+            string queueName = string.IsNullOrEmpty(channelName) ? message.GetType().FullName : channelName;
 
             if (messageAttribute.IsBroadcast)
             {
-                broadcastMessageProcessor.Publish(_channel, queueName, messageAttribute.Durable, message, route);
+                broadcastMessageProcessor.Publish(_channel, queueName, messageAttribute.Durable, message);
             }
             else
             {
-                directMessageProcessor.Publish(_channel, queueName, messageAttribute.Durable, message);
+                var directMessageAttribute = GetCustomAttribute<DirectMessageAttribute>(message.GetType());
+                var expiry = !string.IsNullOrEmpty(message.GetExpiration()) ? message.GetExpiration() : directMessageAttribute.Expiration;
+                directMessageProcessor.Publish(_channel, queueName, messageAttribute.Durable, message, expiry);
             }
         }
 
-        public KeyValuePair<string, object> ListenMessage<T>(string channel, Action<T> callback) where T : IMessage
+        public string ListenMessage<T>(Action<T> callback) where T : IMessage
         {
-            return ListenMessage(channel, callback, new string[] { });
+            return ListenMessage("", callback);
         }
 
-        public KeyValuePair<string, object> ListenMessage<T>(Action<T> callback) where T : IMessage
+        public string ListenMessage<T>(string channel, Action<T> callback) where T : IMessage
         {
-            return ListenMessage("", callback, new string[] { });
-        }
-
-        public KeyValuePair<string, object> ListenMessage<T>(Action<T> callback, string[] routes) where T : IMessage
-        {
-            return ListenMessage("", callback, routes);
-        }
-
-        private KeyValuePair<string, object> ListenMessage<T>(string channel, Action<T> callback, string[] routes) where T : IMessage
-        {
-            MessageAttribute messageAttribute = GetMessageAttribute(typeof(T));
-            ValidateAttribute(messageAttribute, routes);
+            var messageAttribute = GetCustomAttribute<MessageAttribute>(typeof(T));
+            ValidateAttribute(messageAttribute);
 
             string queueName = string.IsNullOrEmpty(channel) ? typeof(T).FullName : channel;
 
             if (messageAttribute.IsBroadcast)
             {
                 var broadcastAttribute = (BroadcastMessageAttribute)messageAttribute;
-                return broadcastMessageProcessor.ListenRabbitMessage(_channel, queueName, messageAttribute.Durable, callback, routes, broadcastAttribute.Target);
+                return broadcastMessageProcessor.ListenRabbitMessage(_channel, queueName, messageAttribute.Durable, callback, broadcastAttribute.Target);
             }
             else
             {
@@ -103,7 +98,7 @@ namespace MqService.Rabbit
 
         public List<T> GetMessages<T>(string channelName)
         {
-            MessageAttribute messageAttribute = GetMessageAttribute(typeof(T));
+            var messageAttribute = GetCustomAttribute<MessageAttribute>(typeof(T));
             ValidateAttribute(messageAttribute);
 
             string queueName = string.IsNullOrEmpty(channelName) ? typeof(T).FullName : channelName;
@@ -138,6 +133,24 @@ namespace MqService.Rabbit
             }
         }
 
+        public object CallRPC<T>(T message) where T : IMessage
+        {
+            if (_rpcAllowed)
+            {
+                throw new NotSupportedException("RPC calls not supported!");
+            }
+            return rpcMessageProcessor.CallRPC(message);
+        }
+
+        public void AcceptRPC<T>(Func<T, object> callback) where T : IMessage
+        {
+            if (_rpcAllowed)
+            {
+                throw new NotSupportedException("RPC calls not supported!");
+            }
+            rpcMessageProcessor.AcceptRPC(callback);
+        }
+
         private void ValidateAttribute(MessageAttribute messageAttribute, string route = null)
         {
             string[] routes = string.IsNullOrEmpty(route) ? null : new string[] { route };
@@ -165,13 +178,13 @@ namespace MqService.Rabbit
             }
         }
 
-        private MessageAttribute GetMessageAttribute(Type messageType)
+        private T GetCustomAttribute<T>(Type messageType) where T : Attribute
         {
             foreach (Attribute attribute in messageType.GetCustomAttributes(false))
             {
-                if (attribute is MessageAttribute)
+                if (attribute is T)
                 {
-                    return (MessageAttribute)attribute;
+                    return (T)attribute;
                 }
             }
             return null;
@@ -184,6 +197,7 @@ namespace MqService.Rabbit
                 _channel.Dispose();
                 _channel = null;
             }
+
             if (_connection != null)
             {
                 _connection.Dispose();
