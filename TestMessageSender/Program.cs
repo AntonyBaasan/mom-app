@@ -88,7 +88,7 @@ namespace TestMessageSender
             var msg = new NotificationMessage
             {
                 To = new String[] { userId },
-                From = "Tester",
+                RequestUserInfo = new UserInfo() { UserId = "Tester" },
                 Text = text,
                 Expiration = "10000"
             };
