@@ -65,6 +65,7 @@
     <Compile Include="Messages\Nlp\NlpResponseMessage.cs" />
     <Compile Include="Messages\NotificationMessage.cs" />
     <Compile Include="Messages\SystemControllerMessage.cs" />
+    <Compile Include="Messages\UserInfo.cs" />
     <Compile Include="Messages\UserQueueMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

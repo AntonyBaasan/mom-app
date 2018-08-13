@@ -9,7 +9,6 @@ namespace MqService.Messages
     [DirectMessage]
     public class UserQueueMessage : AbstractMessage
     {
-        public string UserId;
         public object Content;
         public string ContentTypeFullName;
 
