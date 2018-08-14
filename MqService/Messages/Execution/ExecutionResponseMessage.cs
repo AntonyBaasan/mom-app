@@ -6,6 +6,5 @@ namespace MqService.Messages.Execution
     public class ExecutionResponseMessage: AbstractMessage
     {
         public string ResultText;
-        public string From;
     }
 }

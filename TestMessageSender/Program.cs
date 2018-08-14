@@ -70,7 +70,7 @@ namespace TestMessageSender
 
             var msg = new NlpRequestMessage
             {
-                From = userId,
+                RequestUserInfo = new UserInfo() { UserId = "Tester" },
                 Text = text,
                 Expiration = "10000"
             };

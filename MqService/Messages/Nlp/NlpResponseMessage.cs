@@ -6,6 +6,5 @@ namespace MqService.Messages.Nlp
     public class NlpResponseMessage : AbstractMessage
     {
         public string Response;
-        public string To;
     }
 }

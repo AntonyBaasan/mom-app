@@ -31,29 +31,28 @@ namespace NlpLibrary
             Console.WriteLine("Got a NlpRequestMessage! Text=" + msg.Text);
             // use SimpleParser or Chatbot to get FFO
             List<Intent> intents = RequestToSimpleParserOrChatbot(msg.Text);
-            RequestToExecutionEngine(intents, msg.From);
+            RequestToExecutionEngine(intents, msg.RequestUserInfo);
         }
 
         private void OnExecutionResponse(ExecutionResponseMessage msg)
         {
-            Console.WriteLine("Got a exec result message! ResultText=" + msg.ResultText + ", From: " + msg.From);
+            Console.WriteLine("Got a exec result message! ResultText=" + msg.ResultText + ", RequestUserInfo.UserId: " + msg.RequestUserInfo.UserId);
 
             var message = new NlpResponseMessage();
-            message.Response = "NlpService got response from ExecEngine: " + msg.ResultText + ", From: " + msg.From;
-            message.To = msg.From;
+            message.Response = "NlpService got response from ExecEngine: " + msg.ResultText + ", RequestUserInfo.UserId: " + msg.RequestUserInfo.UserId;
+            message.RequestUserInfo = msg.RequestUserInfo;
 
             _messageService.Publish(message);
         }
 
-        private void RequestToExecutionEngine(List<Intent> intents, string @from)
+        private void RequestToExecutionEngine(List<Intent> intents, UserInfo fromUser)
         {
             var message = new ExecutionRequestMessage();
             //IExecutionObject execObj = ParseIntentToExecutionObject(intent);
             message.Intents = intents;
-            message.From = from;
+            message.RequestUserInfo = fromUser;
             _messageService.Publish(message);
         }
-
 
         //private IExecutionObject ParseIntentToExecutionObject(Intent intent)
         //{

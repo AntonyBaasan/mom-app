@@ -7,6 +7,5 @@ namespace MqService.Messages.Nlp
     {
         public string Text;
         public byte[] Audio;
-        public string From;
     }
 }
