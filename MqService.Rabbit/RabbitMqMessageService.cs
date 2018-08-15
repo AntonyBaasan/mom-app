@@ -34,55 +34,37 @@ namespace MqService.Rabbit
             if (_rpcAllowed) rpcMessageProcessor = new RpcMessageProcessor(_channel);
         }
 
-        public void Publish(IMessage message)
-        {
-            Publish("", message);
-        }
-
         public bool IsConnected()
         {
             return _connection.IsOpen;
         }
 
-        public void Publish(string channelName, IMessage message)
+        public void Publish(string channelName, ChannelType channelType, IMessage message)
         {
             var messageAttribute = GetCustomAttribute<MessageAttribute>(message.GetType());
             ValidateAttribute(messageAttribute);
 
-            string queueName = string.IsNullOrEmpty(channelName) ? message.GetType().FullName : channelName;
-
-            if (messageAttribute.IsBroadcast)
+            if (channelType == ChannelType.Broadcast)
             {
-                broadcastMessageProcessor.Publish(_channel, queueName, messageAttribute.Durable, message);
+                broadcastMessageProcessor.Publish(_channel, channelName, messageAttribute.Durable, message);
             }
             else
             {
                 var directMessageAttribute = GetCustomAttribute<DirectMessageAttribute>(message.GetType());
                 var expiry = !string.IsNullOrEmpty(message.GetExpiration()) ? message.GetExpiration() : directMessageAttribute.Expiration;
-                directMessageProcessor.Publish(_channel, queueName, messageAttribute.Durable, message, expiry);
+                directMessageProcessor.Publish(_channel, channelName, messageAttribute.Durable, message, expiry);
             }
         }
 
-        public string ListenMessage<T>(Action<T> callback) where T : IMessage
+        public string Listen(string channel, ChannelType channelType, Action<IMessage> callback, bool durable = false)
         {
-            return ListenMessage("", callback);
-        }
-
-        public string ListenMessage<T>(string channel, Action<T> callback) where T : IMessage
-        {
-            var messageAttribute = GetCustomAttribute<MessageAttribute>(typeof(T));
-            ValidateAttribute(messageAttribute);
-
-            string queueName = string.IsNullOrEmpty(channel) ? typeof(T).FullName : channel;
-
-            if (messageAttribute.IsBroadcast)
+            if (channelType == ChannelType.Broadcast)
             {
-                var broadcastAttribute = (BroadcastMessageAttribute)messageAttribute;
-                return broadcastMessageProcessor.ListenRabbitMessage(_channel, queueName, messageAttribute.Durable, callback, broadcastAttribute.Target);
+                return broadcastMessageProcessor.ListenRabbitMessage(_channel, channel, callback);
             }
             else
             {
-                return directMessageProcessor.ListenRabbitMessage(_channel, queueName, messageAttribute.Durable, callback);
+                return directMessageProcessor.ListenRabbitMessage(_channel, channel, durable, callback);
             }
         }
 
@@ -91,26 +73,19 @@ namespace MqService.Rabbit
             _channel.BasicCancel(listenerId);
         }
 
-        public List<T> GetMessages<T>()
+        public List<IMessage> GetMessages(string channelName, ChannelType channelType)
         {
-            return GetMessages<T>(null);
-        }
+            //var messageAttribute = GetCustomAttribute<MessageAttribute>(typeof(T));
+            //ValidateAttribute(messageAttribute);
 
-        public List<T> GetMessages<T>(string channelName)
-        {
-            var messageAttribute = GetCustomAttribute<MessageAttribute>(typeof(T));
-            ValidateAttribute(messageAttribute);
-
-            string queueName = string.IsNullOrEmpty(channelName) ? typeof(T).FullName : channelName;
-
-            if (messageAttribute.IsBroadcast)
+            if (channelType == ChannelType.Broadcast)
             {
                 throw new NotImplementedException();
             }
             else
             {
                 uint msgCount = _channel.MessageCount(channelName);
-                var result = new List<T>();
+                var result = new List<IMessage>();
                 for (int i = 0; i < msgCount; i++)
                 {
                     var r = _channel.BasicGet(channelName, false);
@@ -118,7 +93,7 @@ namespace MqService.Rabbit
                     try
                     {
                         var message = Encoding.UTF8.GetString(r.Body);
-                        var msg = JsonConvert.DeserializeObject<T>(message);
+                        var msg = JsonConvert.DeserializeObject<IMessage>(message);
 
                         result.Add(msg);
                         _channel.BasicAck(r.DeliveryTag, false);
@@ -133,7 +108,7 @@ namespace MqService.Rabbit
             }
         }
 
-        public object CallRPC<T>(T message) where T : IMessage
+        public object CallRPC(IMessage message)
         {
             if (_rpcAllowed)
             {
@@ -142,7 +117,7 @@ namespace MqService.Rabbit
             return rpcMessageProcessor.CallRPC(message);
         }
 
-        public void AcceptRPC<T>(Func<T, object> callback) where T : IMessage
+        public void AcceptRPC(Func<IMessage, object> callback)
         {
             if (_rpcAllowed)
             {

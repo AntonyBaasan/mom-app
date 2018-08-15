@@ -58,10 +58,10 @@
     <Compile Include="Messages\AbstractMessage.cs" />
     <Compile Include="Messages\Contents\MessageContentType.cs" />
     <Compile Include="Messages\Execution\ExecutionRequestMessage.cs" />
+    <Compile Include="Messages\IMessage.cs" />
     <Compile Include="Messages\Nlp\NlpRequestMessage.cs" />
     <Compile Include="Messages\Contents\CommandAndControl.cs" />
     <Compile Include="Messages\Execution\ExecutionResponseMessage.cs" />
-    <Compile Include="Messages\IMessage.cs" />
     <Compile Include="Messages\Nlp\NlpResponseMessage.cs" />
     <Compile Include="Messages\NotificationMessage.cs" />
     <Compile Include="Messages\SystemControllerMessage.cs" />

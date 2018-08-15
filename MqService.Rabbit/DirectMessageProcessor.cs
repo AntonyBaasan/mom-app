@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using MqService.Messages;
@@ -20,10 +23,12 @@ namespace MqService.Rabbit
             var jsonAsString = Encoding.UTF8.GetBytes(json);
 
             IBasicProperties props = _channel.CreateBasicProperties();
-            if(!string.IsNullOrEmpty(expiration))
+            if (!string.IsNullOrEmpty(expiration))
             {
                 props.Expiration = expiration;
             }
+            props.Headers = new Dictionary<string, object>();
+            props.Headers.Add("AssemblyQualifiedName", message.GetType().AssemblyQualifiedName);
 
             _channel.BasicPublish(exchange: "",
                 routingKey: queueName,
@@ -31,19 +36,27 @@ namespace MqService.Rabbit
                 body: jsonAsString);
         }
 
-        public string ListenRabbitMessage<T>(IModel _channel, string channelName, bool durable, Action<T> callback) where T : IMessage
+        public string ListenRabbitMessage(IModel _channel, string channelName, bool durable, Action<IMessage> callback) 
         {
             _channel.QueueDeclare(queue: channelName, durable: durable, exclusive: false, autoDelete: false, arguments: null);
 
             var consumer = new AsyncEventingBasicConsumer(_channel);
             consumer.Received += async (model, ea) =>
              {
-                 Debug.WriteLine("Received!!");
+                 try
+                 {
+                     Debug.WriteLine("Received!!");
 
-                 var messagePayload = Encoding.UTF8.GetString(ea.Body);
-                 var msg = JsonConvert.DeserializeObject<T>(messagePayload);
-                 callback(msg);
-                 await Task.Yield();
+                     var assemblyQualifiedName = Encoding.UTF8.GetString((byte[])ea.BasicProperties.Headers["AssemblyQualifiedName"]);
+                     var messagePayload = Encoding.UTF8.GetString(ea.Body);
+                     var msg = JsonConvert.DeserializeObject(messagePayload, Type.GetType(assemblyQualifiedName));
+                     callback(msg as IMessage);
+                     await Task.Yield();
+                 }
+                 catch (Exception ex)
+                 {
+                     Console.WriteLine(ex.Message);
+                 }
              };
 
             return _channel.BasicConsume(queue: channelName, autoAck: true, consumer: consumer);

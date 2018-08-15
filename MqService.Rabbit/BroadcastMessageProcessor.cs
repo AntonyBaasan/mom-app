@@ -28,20 +28,11 @@ namespace MqService.Rabbit
             Console.WriteLine(" [x] Sent fanout to '{0}'", channelName);
         }
 
-        public string ListenRabbitMessage<T>(IModel channel, string channelName, bool durable, Action<T> callback, BroadcastTarget target) where T : IMessage
+        public string ListenRabbitMessage<T>(IModel channel, string channelName, Action<T> callback) where T : IMessage
         {
             channel.ExchangeDeclare(exchange: channelName, type: ExchangeType);
 
-            var queueName = "";
-            if (target == BroadcastTarget.All)
-            {
-                queueName = channel.QueueDeclare().QueueName;
-            }
-            else
-            {
-                queueName = channelName + "_" + GetApplicationName();
-                channel.QueueDeclare(queue: queueName, durable: durable, exclusive: false, autoDelete: false, arguments: null);
-            }
+            var queueName = channel.QueueDeclare().QueueName;
 
             channel.QueueBind(queue: queueName, exchange: channelName, routingKey: "");
 

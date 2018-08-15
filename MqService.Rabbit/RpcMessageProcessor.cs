@@ -27,7 +27,7 @@ namespace MqService.Rabbit
             rpcReplyQueueName = _channel.QueueDeclare().QueueName;
         }
 
-        public object CallRPC<T>(T message) where T : IMessage
+        public object CallRPC(IMessage message)
         {
             
             var props = _channel.CreateBasicProperties();

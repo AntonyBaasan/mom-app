@@ -1,7 +1,5 @@
 using System;
-using System.Linq;
 using MqService;
-using MqService.Helper;
 using MqService.Messages;
 using MqService.Messages.Nlp;
 using MqService.Rabbit;
@@ -10,6 +8,10 @@ namespace TestMessageSender
 {
     class Program
     {
+        private static string executionChannelName = "ExecutionChannel";
+        private static string nlpChannelName = "NlpChannel";
+        private static string tridentChannelName = "TridentChannel";
+
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
@@ -19,23 +21,10 @@ namespace TestMessageSender
             Console.WriteLine("NLP service");
             using (IMessageService messageService = new RabbitMqMessageService(connectionString, port, 1, false))
             {
-                //messageService.ListenMessage<NotificationMessage>(msg =>
-                //{
-                //    Console.WriteLine("Received notification 1 : " + msg.Text);
-                //    try
-                //    {
-                //        var u = new UserQueueMessage() { UserId = msg.To.First(), Expiration = msg.Expiration };
-                //        u.SetContent(msg);
-
-                //        messageService.Publish(QueueNameResolver.GetUserQueueName(msg.To.First()), u);
-
-                //        Console.WriteLine("UserQueueMessage published");
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        Console.WriteLine("ERROR: " + ex.Message);
-                //    }
-                //});
+                messageService.Listen(tridentChannelName, ChannelType.Direct, message =>
+                {
+                    Console.WriteLine("Received msg : " + message.ToString());
+                });
                 //messageService.ListenMessage<UserQueueMessage>(QueueNameResolver.GetUserQueueName("1"), msg =>
                 //{
                 //    Console.WriteLine("Received UserQueueMessage 1 " + msg.ContentTypeFullName);
@@ -75,7 +64,7 @@ namespace TestMessageSender
                 Expiration = "10000"
             };
 
-            messageService.Publish(msg);
+            messageService.Publish(nlpChannelName, ChannelType.Direct, msg);
         }
 
         private static void Publish_NotificationMessage(IMessageService messageService)
@@ -93,15 +82,16 @@ namespace TestMessageSender
                 Expiration = "10000"
             };
 
-            messageService.Publish(msg);
+            messageService.Publish(tridentChannelName, ChannelType.Direct, msg);
         }
+
         private static void CallRpc_NlpRequestMessage(IMessageService messageService)
         {
             Console.WriteLine("Text:");
             var text = Console.ReadLine();
 
-            var result1 = messageService.CallRPC(new NlpRequestMessage() { Text = text });
-            Console.WriteLine("result1: " + result1.ToString());
+            //var result1 = messageService.CallRPC(new NlpRequestMessage() { Text = text });
+            //Console.WriteLine("result1: " + result1.ToString());
         }
     }
 }

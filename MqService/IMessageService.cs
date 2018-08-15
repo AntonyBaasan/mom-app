@@ -4,26 +4,28 @@ using MqService.Messages;
 
 namespace MqService
 {
+    
+    public enum ChannelType
+    {
+        Direct,
+        Broadcast,
+    }
+
     public interface IMessageService: IDisposable
     {
         bool IsConnected();
 
-        void Publish(string channelName, IMessage message);
+        void Publish(string channelName, ChannelType channelType, IMessage message);
 
-        void Publish(IMessage message);
-
-        string ListenMessage<T>(string channelName, Action<T> callback) where T : IMessage;
-
-        string ListenMessage<T>(Action<T> callback) where T : IMessage;
+        string Listen(string channel, ChannelType channelType, Action<IMessage> callback, bool durable = false);
 
         void StopListen(string listenerId);
 
-        List<T> GetMessages<T>();
+        List<IMessage> GetMessages(string channelName, ChannelType channelType);
 
-        List<T> GetMessages<T>(string channelName);
+        //object CallRPC(IMessage message);
 
-        object CallRPC<T>(T message) where T : IMessage;
-
-        void  AcceptRPC<T>(Func<T, object> callback) where T : IMessage;
+        //void  AcceptRPC(Func<IMessage, object> callback);
     }
+
 }
