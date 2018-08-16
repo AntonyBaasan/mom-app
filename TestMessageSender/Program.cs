@@ -1,5 +1,6 @@
 using System;
 using MqService;
+using MqService.Helper;
 using MqService.Messages;
 using MqService.Messages.Nlp;
 using MqService.Rabbit;
@@ -8,9 +9,6 @@ namespace TestMessageSender
 {
     class Program
     {
-        private static string executionChannelName = "ExecutionChannel";
-        private static string nlpChannelName = "NlpChannel";
-        private static string tridentChannelName = "TridentChannel";
 
         static void Main(string[] args)
         {
@@ -21,7 +19,7 @@ namespace TestMessageSender
             Console.WriteLine("NLP service");
             using (IMessageService messageService = new RabbitMqMessageService(connectionString, port, 1, false))
             {
-                messageService.Listen(tridentChannelName, ChannelType.Direct, message =>
+                messageService.Listen(Channels.TRIDENT_USER, ChannelType.Direct, message =>
                 {
                     Console.WriteLine("Received msg : " + message.ToString());
                 });
@@ -59,12 +57,11 @@ namespace TestMessageSender
 
             var msg = new NlpRequestMessage
             {
-                RequestUserInfo = new UserInfo() { UserId = "Tester" },
+                Metadata = new MessageMetadata() { RequestUserInfo = new UserInfo() { UserId = "Tester" }, Expiration = "10000" },
                 Text = text,
-                Expiration = "10000"
             };
 
-            messageService.Publish(nlpChannelName, ChannelType.Direct, msg);
+            messageService.Send(Channels.NLP, ChannelType.Direct, msg);
         }
 
         private static void Publish_NotificationMessage(IMessageService messageService)
@@ -77,12 +74,11 @@ namespace TestMessageSender
             var msg = new NotificationMessage
             {
                 To = new String[] { userId },
-                RequestUserInfo = new UserInfo() { UserId = "Tester" },
                 Text = text,
-                Expiration = "10000"
+                Metadata = new MessageMetadata() { RequestUserInfo = new UserInfo() { UserId = "Tester" }, Expiration = "10000" },
             };
 
-            messageService.Publish(tridentChannelName, ChannelType.Direct, msg);
+            messageService.Send(Channels.TRIDENT_USER, ChannelType.Direct, msg);
         }
 
         private static void CallRpc_NlpRequestMessage(IMessageService messageService)

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using MqService.Helper;
 using MqService.Messages;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
@@ -14,15 +15,15 @@ namespace MqService.Rabbit
 {
     class DirectMessageProcessor
     {
-        public void Publish(IModel _channel, string queueName, bool durable, IMessage message, string expiration)
+        public void Publish(IModel channel, Channels channelName, bool durable, IMessage message, string expiration)
         {
             //important to use no wait, otherwise throws an exception if we try to publish inside Consumer handler
-            _channel.QueueDeclareNoWait(queue: queueName, durable: durable, exclusive: false, autoDelete: false, arguments: null);
+            channel.QueueDeclareNoWait(queue: channelName.ToString(), durable: durable, exclusive: false, autoDelete: false, arguments: null);
 
             string json = JsonConvert.SerializeObject(message);
             var jsonAsString = Encoding.UTF8.GetBytes(json);
 
-            IBasicProperties props = _channel.CreateBasicProperties();
+            IBasicProperties props = channel.CreateBasicProperties();
             if (!string.IsNullOrEmpty(expiration))
             {
                 props.Expiration = expiration;
@@ -30,17 +31,17 @@ namespace MqService.Rabbit
             props.Headers = new Dictionary<string, object>();
             props.Headers.Add("AssemblyQualifiedName", message.GetType().AssemblyQualifiedName);
 
-            _channel.BasicPublish(exchange: "",
-                routingKey: queueName,
+            channel.BasicPublish(exchange: "",
+                routingKey: channelName.ToString(),
                 basicProperties: props,
                 body: jsonAsString);
         }
 
-        public string ListenRabbitMessage(IModel _channel, string channelName, bool durable, Action<IMessage> callback) 
+        public string ListenRabbitMessage(IModel channel, Channels channelName,  Action<IMessage> callback) 
         {
-            _channel.QueueDeclare(queue: channelName, durable: durable, exclusive: false, autoDelete: false, arguments: null);
+            channel.QueueDeclare(queue: channelName.ToString(), durable: false, exclusive: false, autoDelete: false, arguments: null);
 
-            var consumer = new AsyncEventingBasicConsumer(_channel);
+            var consumer = new AsyncEventingBasicConsumer(channel);
             consumer.Received += async (model, ea) =>
              {
                  try
@@ -59,7 +60,7 @@ namespace MqService.Rabbit
                  }
              };
 
-            return _channel.BasicConsume(queue: channelName, autoAck: true, consumer: consumer);
+            return channel.BasicConsume(queue: channelName.ToString(), autoAck: true, consumer: consumer);
         }
     }
 }

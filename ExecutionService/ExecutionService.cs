@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using MqService;
 using MqService.Domain;
+using MqService.Helper;
 using MqService.Messages;
 using MqService.Messages.Execution;
 using RestConsumer;
@@ -11,8 +12,6 @@ namespace ExecutionServiceLibrary
 {
     public class ExecutionService
     {
-        private string executionChannelName = "ExecutionChannel";
-        private string nlpChannelName = "NlpChannel";
         private readonly IMessageService _messageService;
         private RestClient _restClient;
         private string _authToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1bmlxdWVfbmFtZSI6IjEiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0L1dpbmRvd3NBdXRoZW50aWNhdGlvblNlcnZpY2UiLCJhdWQiOiI4OTYzMjFtOTY4NTQ3MWtsM2JvYjljODhmMDBqNTY3OCIsImV4cCI6MTU2NTcxMTMzOCwibmJmIjoxNTM0MTc1MzM4fQ.GSf0p3p0fyK-8roT8fu3FRWj3vKrHKN2u7gDhamMe6c";
@@ -21,7 +20,7 @@ namespace ExecutionServiceLibrary
         public ExecutionService(IMessageService messageService)
         {
             _messageService = messageService;
-            _messageService.Listen(executionChannelName, ChannelType.Direct, OnExecutionRequestReceived);
+            _messageService.Listen(Channels.EXECUTION, ChannelType.Direct, OnExecutionRequestReceived);
 
             _restClient = new RestClient("http://localhost/PROPHIX/");
         }
@@ -52,8 +51,8 @@ namespace ExecutionServiceLibrary
 
             var message = new ExecutionResponseMessage();
             message.ResultText = "ExecutedObject1";
-            message.RequestUserInfo = request.RequestUserInfo;
-            _messageService.Publish(nlpChannelName, ChannelType.Direct, message);
+            message.Metadata = new MessageMetadata() { RequestUserInfo = request.Metadata.RequestUserInfo };
+            _messageService.Send(Channels.NLP, ChannelType.Direct, message);
         }
 
         private HttpResponseMessage SendHttpRequest()

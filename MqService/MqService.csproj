@@ -53,12 +53,14 @@
     <Compile Include="Attributes\DirectMessageAttribute.cs" />
     <Compile Include="Attributes\MessageAttribute.cs" />
     <Compile Include="Domain\Intent.cs" />
+    <Compile Include="Helper\Channels.cs" />
     <Compile Include="Helper\QueueNameResolver.cs" />
     <Compile Include="IMessageService.cs" />
     <Compile Include="Messages\AbstractMessage.cs" />
     <Compile Include="Messages\Contents\MessageContentType.cs" />
     <Compile Include="Messages\Execution\ExecutionRequestMessage.cs" />
     <Compile Include="Messages\IMessage.cs" />
+    <Compile Include="Messages\MessageMetadata.cs" />
     <Compile Include="Messages\Nlp\NlpRequestMessage.cs" />
     <Compile Include="Messages\Contents\CommandAndControl.cs" />
     <Compile Include="Messages\Execution\ExecutionResponseMessage.cs" />

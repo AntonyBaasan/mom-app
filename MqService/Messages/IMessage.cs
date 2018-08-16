@@ -2,7 +2,6 @@
 {
     public interface IMessage
     {
-        string GetExpiration();
-        UserInfo GetRequestUserInfo();
+        MessageMetadata Metadata { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using MqService.Attributes;
+using MqService.Helper;
 using MqService.Messages;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
@@ -13,10 +14,10 @@ namespace MqService.Rabbit
         private readonly bool _rpcAllowed;
         private ConnectionFactory factory;
         private IConnection _connection;
-        private IModel _channel;
-        private BroadcastMessageProcessor broadcastMessageProcessor;
-        private DirectMessageProcessor directMessageProcessor;
-        private RpcMessageProcessor rpcMessageProcessor;
+        private IModel _model;
+        private BroadcastMessageProcessor _broadcastMessageProcessor;
+        private DirectMessageProcessor _directMessageProcessor;
+        //private RpcMessageProcessor _rpcMessageProcessor;
 
 
         public RabbitMqMessageService(string connection, int port, int autoRecoveryIntervalMinutes = 1, bool rpcAllowed = true)
@@ -27,11 +28,11 @@ namespace MqService.Rabbit
             factory.NetworkRecoveryInterval = TimeSpan.FromMinutes(autoRecoveryIntervalMinutes);
 
             _connection = factory.CreateConnection();
-            _channel = _connection.CreateModel();
+            _model = _connection.CreateModel();
 
-            broadcastMessageProcessor = new BroadcastMessageProcessor();
-            directMessageProcessor = new DirectMessageProcessor();
-            if (_rpcAllowed) rpcMessageProcessor = new RpcMessageProcessor(_channel);
+            _broadcastMessageProcessor = new BroadcastMessageProcessor();
+            _directMessageProcessor = new DirectMessageProcessor();
+            //if (_rpcAllowed) _rpcMessageProcessor = new RpcMessageProcessor(_model);
         }
 
         public bool IsConnected()
@@ -39,38 +40,38 @@ namespace MqService.Rabbit
             return _connection.IsOpen;
         }
 
-        public void Publish(string channelName, ChannelType channelType, IMessage message)
+        public void Send(Channels channelName, ChannelType channelType, IMessage message)
         {
             var messageAttribute = GetCustomAttribute<MessageAttribute>(message.GetType());
             ValidateAttribute(messageAttribute);
 
             if (channelType == ChannelType.Broadcast)
             {
-                broadcastMessageProcessor.Publish(_channel, channelName, messageAttribute.Durable, message);
+                _broadcastMessageProcessor.Publish(_model, channelName, messageAttribute.Durable, message);
             }
             else
             {
                 var directMessageAttribute = GetCustomAttribute<DirectMessageAttribute>(message.GetType());
-                var expiry = !string.IsNullOrEmpty(message.GetExpiration()) ? message.GetExpiration() : directMessageAttribute.Expiration;
-                directMessageProcessor.Publish(_channel, channelName, messageAttribute.Durable, message, expiry);
+                var expiry = !string.IsNullOrEmpty(message.Metadata.Expiration) ? message.Metadata.Expiration : directMessageAttribute.Expiration;
+                _directMessageProcessor.Publish(_model, channelName, messageAttribute.Durable, message, expiry);
             }
         }
 
-        public string Listen(string channel, ChannelType channelType, Action<IMessage> callback, bool durable = false)
+        public string Listen(Channels channelName, ChannelType channelType, Action<IMessage> callback)
         {
             if (channelType == ChannelType.Broadcast)
             {
-                return broadcastMessageProcessor.ListenRabbitMessage(_channel, channel, callback);
+                return _broadcastMessageProcessor.ListenRabbitMessage(_model, channelName, callback);
             }
             else
             {
-                return directMessageProcessor.ListenRabbitMessage(_channel, channel, durable, callback);
+                return _directMessageProcessor.ListenRabbitMessage(_model, channelName, callback);
             }
         }
 
         public void StopListen(string listenerId)
         {
-            _channel.BasicCancel(listenerId);
+            _model.BasicCancel(listenerId);
         }
 
         public List<IMessage> GetMessages(string channelName, ChannelType channelType)
@@ -84,11 +85,11 @@ namespace MqService.Rabbit
             }
             else
             {
-                uint msgCount = _channel.MessageCount(channelName);
+                uint msgCount = _model.MessageCount(channelName);
                 var result = new List<IMessage>();
                 for (int i = 0; i < msgCount; i++)
                 {
-                    var r = _channel.BasicGet(channelName, false);
+                    var r = _model.BasicGet(channelName, false);
                     if (r == null) { continue; }
                     try
                     {
@@ -96,7 +97,7 @@ namespace MqService.Rabbit
                         var msg = JsonConvert.DeserializeObject<IMessage>(message);
 
                         result.Add(msg);
-                        _channel.BasicAck(r.DeliveryTag, false);
+                        _model.BasicAck(r.DeliveryTag, false);
                     }
                     catch (Exception e)
                     {
@@ -110,20 +111,22 @@ namespace MqService.Rabbit
 
         public object CallRPC(IMessage message)
         {
-            if (_rpcAllowed)
-            {
-                throw new NotSupportedException("RPC calls not supported!");
-            }
-            return rpcMessageProcessor.CallRPC(message);
+            throw new NotImplementedException();
+            //if (_rpcAllowed)
+            //{
+            //    throw new NotSupportedException("RPC calls not supported!");
+            //}
+            //return _rpcMessageProcessor.CallRPC(message);
         }
 
         public void AcceptRPC(Func<IMessage, object> callback)
         {
-            if (_rpcAllowed)
-            {
-                throw new NotSupportedException("RPC calls not supported!");
-            }
-            rpcMessageProcessor.AcceptRPC(callback);
+            throw new NotImplementedException();
+            //if (_rpcAllowed)
+            //{
+            //    throw new NotSupportedException("RPC calls not supported!");
+            //}
+            //_rpcMessageProcessor.AcceptRPC(callback);
         }
 
         private void ValidateAttribute(MessageAttribute messageAttribute, string route = null)
@@ -141,11 +144,6 @@ namespace MqService.Rabbit
             if (messageAttribute.IsBroadcast)
             {
                 var broadcaseAttr = (BroadcastMessageAttribute)messageAttribute;
-                //if (broadcaseAttr.RouteRequired == true && (route == null || route.Length == 0))
-                //{
-                //    throw new Exception($"Route information required for this type of message!");
-                //}
-
                 if (broadcaseAttr.Target == BroadcastTarget.Application && !(route == null || route.Length == 0))
                 {
                     throw new Exception($"Usage of 'Route' and 'BroadcastTarget.Application' will introduce not logical result!");
@@ -167,17 +165,11 @@ namespace MqService.Rabbit
 
         public void Dispose()
         {
-            if (_channel != null)
-            {
-                _channel.Dispose();
-                _channel = null;
-            }
+            _model?.Dispose();
+            _model = null;
 
-            if (_connection != null)
-            {
-                _connection.Dispose();
-                _connection = null;
-            }
+            _connection?.Dispose();
+            _connection = null;
         }
 
     }

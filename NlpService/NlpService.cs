@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using MqService;
 using MqService.Domain;
+using MqService.Helper;
 using MqService.Messages;
 using MqService.Messages.Execution;
 using MqService.Messages.Nlp;
@@ -11,9 +12,6 @@ namespace NlpLibrary
     public class NlpService
     {
         private readonly IMessageService _messageService;
-        private string executionChannelName = "ExecutionChannel";
-        private string nlpChannelName = "NlpChannel";
-        private string tridentChannelName = "TridentChannel";
         private Dictionary<Type, Action<IMessage>> typeActionMap;
 
         public NlpService(IMessageService messageService)
@@ -28,7 +26,7 @@ namespace NlpLibrary
         private void InitListeners()
         {
             // TODO: listen execution response
-            _messageService.Listen(nlpChannelName, ChannelType.Direct, OnNlpRequest);
+            _messageService.Listen(Channels.NLP, ChannelType.Direct, OnNlpRequest);
         }
 
         private void OnNlpRequest(IMessage message)
@@ -50,20 +48,21 @@ namespace NlpLibrary
             Console.WriteLine("Got a ! Text=" + request.Text);
             // use SimpleParser or Chatbot to get FFO
             List<Intent> intents = RequestToSimpleParserOrChatbot(request.Text);
-            RequestToExecutionEngine(intents, request.RequestUserInfo);
+            RequestToExecutionEngine(intents, request.Metadata.RequestUserInfo);
         }
 
         private void HandleExecutionResponseMessage(IMessage msg)
         {
             var request = (ExecutionResponseMessage) msg;
 
-            Console.WriteLine("Got a exec result message! ResultText=" + request.ResultText + ", RequestUserInfo.UserId: " + request.RequestUserInfo.UserId);
+            var requestUserInfo = request.Metadata.RequestUserInfo;
+            Console.WriteLine("Got a exec result message! ResultText=" + request.ResultText + ", RequestUserInfo.UserId: " + requestUserInfo.UserId);
 
             var message = new NlpResponseMessage();
-            message.Response = "NlpService got response from ExecEngine: " + request.ResultText + ", RequestUserInfo.UserId: " + request.RequestUserInfo.UserId;
-            message.RequestUserInfo = request.RequestUserInfo;
+            message.Response = "NlpService got response from ExecEngine: " + request.ResultText + ", RequestUserInfo.UserId: " + requestUserInfo.UserId;
+            message.Metadata = new MessageMetadata() { RequestUserInfo = requestUserInfo };
 
-            _messageService.Publish(tridentChannelName, ChannelType.Direct, message);
+            _messageService.Send(Channels.TRIDENT_USER, ChannelType.Direct, message);
         }
 
         private void RequestToExecutionEngine(List<Intent> intents, UserInfo fromUser)
@@ -71,8 +70,8 @@ namespace NlpLibrary
             var message = new ExecutionRequestMessage();
             //IExecutionObject execObj = ParseIntentToExecutionObject(intent);
             message.Intents = intents;
-            message.RequestUserInfo = fromUser;
-            _messageService.Publish(executionChannelName, ChannelType.Direct, message);
+            message.Metadata = new MessageMetadata() { RequestUserInfo = fromUser };
+            _messageService.Send(Channels.EXECUTION, ChannelType.Direct, message);
         }
 
         //private IExecutionObject ParseIntentToExecutionObject(Intent intent)

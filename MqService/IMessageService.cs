@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MqService.Helper;
 using MqService.Messages;
 
 namespace MqService
@@ -15,9 +16,9 @@ namespace MqService
     {
         bool IsConnected();
 
-        void Publish(string channelName, ChannelType channelType, IMessage message);
+        void Send(Channels channelName, ChannelType channelType, IMessage message);
 
-        string Listen(string channel, ChannelType channelType, Action<IMessage> callback, bool durable = false);
+        string Listen(Channels channelName, ChannelType channelType, Action<IMessage> callback);
 
         void StopListen(string listenerId);
 

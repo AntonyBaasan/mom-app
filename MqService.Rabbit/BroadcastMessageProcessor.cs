@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using MqService.Attributes;
+using MqService.Helper;
 using MqService.Messages;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
@@ -14,27 +15,27 @@ namespace MqService.Rabbit
         private const string ExchangeType = "fanout";
         private const string EmptyRoute = "anonymous.info";
 
-        public void Publish(IModel channel, string channelName, bool durable, IMessage message)
+        public void Publish(IModel channel, Channels channelName, bool durable, IMessage message)
         {
-            channel.ExchangeDeclareNoWait(exchange: channelName, type: ExchangeType);
+            channel.ExchangeDeclareNoWait(exchange: channelName.ToString(), type: ExchangeType);
 
             string json = JsonConvert.SerializeObject(message);
             var jsonAsString = Encoding.UTF8.GetBytes(json);
 
-            channel.BasicPublish(exchange: channelName,
+            channel.BasicPublish(exchange: channelName.ToString(),
                 routingKey: "",
                 basicProperties: null,
                 body: jsonAsString);
             Console.WriteLine(" [x] Sent fanout to '{0}'", channelName);
         }
 
-        public string ListenRabbitMessage<T>(IModel channel, string channelName, Action<T> callback) where T : IMessage
+        public string ListenRabbitMessage<T>(IModel channel, Channels channelName, Action<T> callback) where T : IMessage
         {
-            channel.ExchangeDeclare(exchange: channelName, type: ExchangeType);
+            channel.ExchangeDeclare(exchange: channelName.ToString(), type: ExchangeType);
 
             var queueName = channel.QueueDeclare().QueueName;
 
-            channel.QueueBind(queue: queueName, exchange: channelName, routingKey: "");
+            channel.QueueBind(queue: queueName, exchange: channelName.ToString(), routingKey: "");
 
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += (model, ea) =>
