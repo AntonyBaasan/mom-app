@@ -41,9 +41,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="NlpService.cs" />
+    <Compile Include="Parser\IParser.cs" />
+    <Compile Include="Parser\SimpleParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ExecutionService\ExecutionService.csproj">
+      <Project>{9ee2e7ec-52e3-4098-b393-22ece9295420}</Project>
+      <Name>ExecutionService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MqService\MqService.csproj">
       <Project>{ED4F6758-B66C-41A1-A650-989876D095FA}</Project>
       <Name>MqService</Name>

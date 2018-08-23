@@ -49,6 +49,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ExecutionService\ExecutionService.csproj">
+      <Project>{9EE2E7EC-52E3-4098-B393-22ECE9295420}</Project>
+      <Name>ExecutionService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MqService.Rabbit\MqService.Rabbit.csproj">
       <Project>{B07E3CEB-6637-46EF-946A-51BB56C50674}</Project>
       <Name>MqService.Rabbit</Name>

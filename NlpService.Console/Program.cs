@@ -1,9 +1,6 @@
 ﻿using System;
+using ExecutionService;
 using MqService;
-using MqService.Helper;
-using MqService.Messages;
-using MqService.Messages.Contents;
-using MqService.Messages.Nlp;
 using MqService.Rabbit;
 using NlpLibrary;
 
@@ -18,7 +15,8 @@ namespace NlpConsoleApp
             var port = 5672;
 
             IMessageService messageService = new RabbitMqMessageService(connectionString, port, 1, false);
-            NlpService nlpService = new NlpService(messageService);
+            IExecutionService executionService = new ExecutionService.ExecutionService();
+            NlpService nlpService = new NlpService(messageService, executionService);
 
             Console.WriteLine("NLP service started...");
             Console.ReadKey();
