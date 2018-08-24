@@ -19,9 +19,9 @@ namespace RestConsumer
         public string XsrfToken;
     }
 
-    public class RestClient
+    public class RestClient : IRestClient
     {
-        private string _baseUri;
+        private readonly string _baseUri;
 
         public RestClient(string baseUri)
         {

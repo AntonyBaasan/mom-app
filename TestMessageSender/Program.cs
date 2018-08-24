@@ -57,7 +57,11 @@ namespace TestMessageSender
 
             var msg = new NlpRequestMessage
             {
-                Metadata = new MessageMetadata() { RequestUserInfo = new UserInfo() { UserId = "Tester" }, Expiration = "10000" },
+                Metadata = new MessageMetadata()
+                {
+                    RequestUserInfo = new UserInfo() { UserId = userId }, 
+                    Expiration = "10000"
+                },
                 Text = text,
             };
 

@@ -41,7 +41,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandBuilder.cs" />
+    <Compile Include="Commands\AbstractCommand.cs" />
     <Compile Include="Commands\ICommand.cs" />
+    <Compile Include="Commands\OpenModuleCommand.cs" />
+    <Compile Include="ExecutionContext.cs" />
     <Compile Include="ExecutionService.cs" />
     <Compile Include="ExecutionService_Bak.cs" />
     <Compile Include="IExecutionService.cs" />

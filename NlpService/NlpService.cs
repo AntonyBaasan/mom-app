@@ -6,7 +6,6 @@ using MqService;
 using MqService.Domain;
 using MqService.Helper;
 using MqService.Messages;
-using MqService.Messages.Execution;
 using MqService.Messages.Nlp;
 
 namespace NlpLibrary
@@ -51,7 +50,7 @@ namespace NlpLibrary
 
         private void HandleNlpRequestMessage(IMessage message)
         {
-            var request = (NlpRequestMessage) message;
+            var request = (NlpRequestMessage)message;
 
             Console.WriteLine("Got a ! Text=" + request.Text);
             // use SimpleParser or Chatbot to get FFO
@@ -59,12 +58,12 @@ namespace NlpLibrary
             //RequestToExecutionEngine(intents, request.Metadata.RequestUserInfo);
 
             ICommand command = ConvertIntentToCommand(intent);
-            _executionService.Execute(command, request.Metadata.RequestUserInfo);
+            _executionService.Execute(command, request.Metadata);
         }
 
         private ICommand ConvertIntentToCommand(Intent intent)
         {
-            throw new NotImplementedException();
+            return new OpenModuleCommand() { ModuleName = "AdHoc" };
         }
 
         //private void HandleExecutionResponseMessage(IMessage msg)

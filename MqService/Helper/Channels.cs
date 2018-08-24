@@ -1,30 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MqService.Helper
+﻿namespace MqService.Helper
 {
     public sealed class Channels
     {
-        private readonly String name;
+        private readonly string name;
         private readonly int value;
 
-        private string executionChannelName = "ExecutionChannel";
-        private string nlpChannelName = "NlpChannel";
-        private string tridentChannelName = "TridentChannel";
+        private static readonly string executionChannelName = "EXECUTION";
+        private static readonly string nlpChannelName = "NLP";
+        private static readonly string tridentChannelName = "TRIDENT_USER";
 
-        public static readonly Channels EXECUTION = new Channels (1, "EXECUTION");
-        public static readonly Channels NLP = new Channels (2, "NLP");
-        public static readonly Channels TRIDENT_USER = new Channels (3, "TRIDENT_USER");        
+        public static readonly Channels EXECUTION = new Channels(1, executionChannelName);
+        public static readonly Channels NLP = new Channels(2, nlpChannelName);
+        public static readonly Channels TRIDENT_USER = new Channels(3, tridentChannelName);
 
-        private Channels(int value, String name){
+        private Channels(int value, string name)
+        {
             this.name = name;
             this.value = value;
         }
 
-        public override String ToString(){
+        public override string ToString()
+        {
             return name;
         }
     }

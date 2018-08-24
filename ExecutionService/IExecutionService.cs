@@ -6,7 +6,7 @@ namespace ExecutionService
 {
     public interface IExecutionService
     {
-        object Execute(ICommand command, UserInfo sender);
-        object Execute(List<List<ICommand>> commands, UserInfo sender);
+        object Execute(ICommand command, MessageMetadata metadata);
+        object Execute(List<List<ICommand>> commands, MessageMetadata metadata);
     }
 }

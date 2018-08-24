@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MqService.Messages;
 
 namespace ExecutionService.Commands
 {
     public interface ICommand
     {
-        bool isThisCommand(string commandName);
-
-        object Execute();
+        object Execute(ExecutionContext context);
+        void SetSender(UserInfo userInfo);
     }
 }

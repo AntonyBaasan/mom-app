@@ -3,6 +3,7 @@ using ExecutionService;
 using MqService;
 using MqService.Rabbit;
 using NlpLibrary;
+using RestConsumer;
 
 namespace NlpConsoleApp
 {
@@ -15,7 +16,8 @@ namespace NlpConsoleApp
             var port = 5672;
 
             IMessageService messageService = new RabbitMqMessageService(connectionString, port, 1, false);
-            IExecutionService executionService = new ExecutionService.ExecutionService();
+            IRestClient restClient = new RestClient("http://localhost");
+            IExecutionService executionService = new ExecutionService.ExecutionService(messageService, restClient);
             NlpService nlpService = new NlpService(messageService, executionService);
 
             Console.WriteLine("NLP service started...");

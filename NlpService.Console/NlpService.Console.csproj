@@ -65,6 +65,10 @@
       <Project>{E5B3EE53-633A-4EC1-B79F-F6196F90645C}</Project>
       <Name>NlpService</Name>
     </ProjectReference>
+    <ProjectReference Include="..\RestConsumer\RestConsumer.csproj">
+      <Project>{E42BD04E-6284-47AA-9EA7-DA74185E7604}</Project>
+      <Name>RestConsumer</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
