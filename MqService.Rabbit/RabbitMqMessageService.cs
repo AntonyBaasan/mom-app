@@ -42,6 +42,11 @@ namespace MqService.Rabbit
 
         public void Send(Channels channelName, ChannelType channelType, IMessage message)
         {
+            Send(channelName.ToString(), channelType, message);
+        }
+
+        public void Send(string channelName, ChannelType channelType, IMessage message)
+        {
             var messageAttribute = GetCustomAttribute<MessageAttribute>(message.GetType());
             ValidateAttribute(messageAttribute);
 
@@ -58,6 +63,11 @@ namespace MqService.Rabbit
         }
 
         public string Listen(Channels channelName, ChannelType channelType, Action<IMessage> callback)
+        {
+            return Listen( channelName.ToString(), channelType, callback);
+        }
+
+        public string Listen(string channelName, ChannelType channelType, Action<IMessage> callback)
         {
             if (channelType == ChannelType.Broadcast)
             {

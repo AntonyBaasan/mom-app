@@ -16,7 +16,11 @@ namespace MqService
     {
         bool IsConnected();
 
+        void Send(string channelName, ChannelType channelType, IMessage message);
+
         void Send(Channels channelName, ChannelType channelType, IMessage message);
+
+        string Listen(string channelName, ChannelType channelType, Action<IMessage> callback);
 
         string Listen(Channels channelName, ChannelType channelType, Action<IMessage> callback);
 

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
-using MqService.Attributes;
-using MqService.Helper;
 using MqService.Messages;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
@@ -15,7 +12,7 @@ namespace MqService.Rabbit
         private const string ExchangeType = "fanout";
         private const string EmptyRoute = "anonymous.info";
 
-        public void Publish(IModel channel, Channels channelName, bool durable, IMessage message)
+        public void Publish(IModel channel, string channelName, bool durable, IMessage message)
         {
             channel.ExchangeDeclareNoWait(exchange: channelName.ToString(), type: ExchangeType);
 
@@ -29,7 +26,7 @@ namespace MqService.Rabbit
             Console.WriteLine(" [x] Sent fanout to '{0}'", channelName);
         }
 
-        public string ListenRabbitMessage<T>(IModel channel, Channels channelName, Action<T> callback) where T : IMessage
+        public string ListenRabbitMessage<T>(IModel channel, string channelName, Action<T> callback) where T : IMessage
         {
             channel.ExchangeDeclare(exchange: channelName.ToString(), type: ExchangeType);
 

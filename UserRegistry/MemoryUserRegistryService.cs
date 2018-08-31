@@ -8,8 +8,8 @@ namespace UserRegistry
     {
         private readonly Dictionary<string, HashSet<string>> _users;
 
-        public Action<string, string, HashSet<string>> OnUserConnected { get; set; }
-        public Action<string, string, HashSet<string>> OnUserDisconnected { get; set; }
+        public Action<string, string, HashSet<string>> OnConnected { get; set; }
+        public Action<string, string, HashSet<string>> OnDisconnected { get; set; }
 
         public MemoryUserRegistryService()
         {
@@ -34,7 +34,7 @@ namespace UserRegistry
                     _users[userId].Add(connectionId);
                 }
 
-                OnUserConnected?.Invoke(userId, connectionId, _users[userId]);
+                OnConnected?.Invoke(userId, connectionId, _users[userId]);
             }
         }
 
@@ -55,7 +55,7 @@ namespace UserRegistry
                     }
                 }
 
-                OnUserDisconnected?.Invoke(userId, connectionId, _users.ContainsKey(userId) ? _users[userId] :  new HashSet<string>());
+                OnDisconnected?.Invoke(userId, connectionId, _users.ContainsKey(userId) ? _users[userId] :  new HashSet<string>());
             }
         }
 

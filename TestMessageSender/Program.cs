@@ -19,11 +19,11 @@ namespace TestMessageSender
             Console.WriteLine("NLP service");
             using (IMessageService messageService = new RabbitMqMessageService(connectionString, port, 1, false))
             {
-                messageService.Listen(Channels.TRIDENT_USER, ChannelType.Direct, message =>
-                {
-                    Console.WriteLine("Received msg : " + message.ToString());
-                });
-                //messageService.ListenMessage<UserQueueMessage>(QueueNameResolver.GetUserQueueName("1"), msg =>
+                //messageService.Listen(Channels.TRIDENT_USER, ChannelType.Direct, message =>
+                //{
+                //    Console.WriteLine("Received msg : " + message.ToString());
+                //});
+                //messageService.ListenMessage<UserQueueMessage>(/*QueueNameResolver*/.GetUserQueueName("1"), msg =>
                 //{
                 //    Console.WriteLine("Received UserQueueMessage 1 " + msg.ContentTypeFullName);
                 //});

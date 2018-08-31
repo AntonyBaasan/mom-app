@@ -5,8 +5,8 @@ namespace UserRegistry
 {
     public interface IUserRegistryService
     {
-        Action<string, string, HashSet<string>> OnUserConnected { get; set; }
-        Action<string, string, HashSet<string>> OnUserDisconnected { get; set; }
+        Action<string, string, HashSet<string>> OnConnected { get; set; }
+        Action<string, string, HashSet<string>> OnDisconnected { get; set; }
 
         int Count {get;}
 
